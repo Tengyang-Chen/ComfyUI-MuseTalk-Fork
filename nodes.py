@@ -10,6 +10,7 @@ import pickle
 from tqdm import tqdm
 import copy
 import comfy.utils
+import shutil
 
 import folder_paths
 comfy_path = os.path.dirname(folder_paths.__file__)
@@ -102,6 +103,12 @@ class MuseTalkRun:
         ############################################## extract frames from source video ##############################################
         if get_file_type(video_path)=="video":
             save_dir_full = os.path.join(args.result_dir, input_basename)
+            # remove the existing folder if exists and create a new one
+            # beacasue the ffmpeg command will not overwrite the whole pngs in existing folder if the number of frames is smaller than the existing one
+            # then you will get two different HxW images and get error
+            # this will happen when you restart the comfyui and input_basename will be re-count, like from /data/ComfyUI/output/AnimateDiff_00001.
+            if os.path.exists(save_dir_full):
+                shutil.rmtree(save_dir_full)
             os.makedirs(save_dir_full,exist_ok = True)
             cmd = f"ffmpeg -i {video_path} -start_number 0 {save_dir_full}/%08d.png"
             os.system(cmd)
